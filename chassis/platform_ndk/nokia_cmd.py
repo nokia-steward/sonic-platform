@@ -607,7 +607,7 @@ def show_sfm_eeprom():
         return
 
     if format_type == 'json-format':
-        json_response = MessageToJson(response,including_default_value_fields=True)
+        json_response = MessageToJson(response,always_print_fields_with_nopresence=True)
         print(json_response)
         return
 
