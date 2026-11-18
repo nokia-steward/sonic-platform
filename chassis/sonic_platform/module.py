@@ -366,6 +366,16 @@ class Module(ModuleBase):
         else:
             return False
 
+    def is_shutdown_allowed(self):
+        """
+        Indicate whether this module can be administratively shut down.
+        Only fabric cards support admin shutdown.
+
+        Returns:
+            bool: True if shutdown is allowed, False if not
+        """
+        return self.get_type() == self.MODULE_TYPE_FABRIC
+
     def get_platform_type(self):
         """
         Retrieves the type of the card
