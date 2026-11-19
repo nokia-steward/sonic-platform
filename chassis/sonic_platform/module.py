@@ -75,6 +75,7 @@ class Module(ModuleBase):
         self.chassis_type =  platform_ndk_pb2.HwChassisType.HW_CHASSIS_TYPE_INVALID
         self.description = "Unavailable"
         self.sfm_module_eeprom = None
+        self.serial_number = ""
 
     def _get_sfm_eeprom(self):
         if self.get_type() == ModuleBase.MODULE_TYPE_FABRIC:
@@ -228,6 +229,7 @@ class Module(ModuleBase):
 
     def get_presence(self):
         if self.get_oper_status() == ModuleBase.MODULE_STATUS_EMPTY:
+            self.serial_number = ""
             return False
         else:
             return True
@@ -390,7 +392,7 @@ class Module(ModuleBase):
         elif self.get_type() == self.MODULE_TYPE_FABRIC:
             return platform_ndk_pb2.HwModuleType.HW_MODULE_TYPE_FABRIC
         else:
-            return 'Unknown card-type'
+            return platform_ndk_pb2.HwModuleType.HW_MODULE_TYPE_INVALID
 
     def set_maximum_consumed_power(self, consumed_power):
         """
@@ -438,6 +440,18 @@ class Module(ModuleBase):
                     return eeprom_info[EEPROM_PART]
         return None
 
+    def _log_module_presence(self, serial_number):
+        """
+        Log the linecard presence with its serial number once. It is logged
+        again only after the card is removed or its serial number changes.
+        """
+        if not serial_number:
+            return
+        if self.serial_number != serial_number:
+            self.serial_number = serial_number
+            logger.log_notice("HwInfo - Module {} (Slot {}) serial number {}".format(
+                self.module_name, self.get_slot(), serial_number))
+
     def get_serial(self):
         if self.eeprom is not None:
             return self.eeprom.get_serial_number()
@@ -449,6 +463,7 @@ class Module(ModuleBase):
             eeprom_info = self._get_module_eeprom_info()
             if eeprom_info is not None:
                 if EEPROM_SERIAL in eeprom_info:
+                    self._log_module_presence(eeprom_info[EEPROM_SERIAL])
                     return eeprom_info[EEPROM_SERIAL]
         return None
 
